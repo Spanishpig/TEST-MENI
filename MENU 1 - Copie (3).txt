@@ -1,0 +1,133 @@
+-- Fonction pour créer le menu
+local function CreateRageMenu()
+    -- Cadre principal
+    local frame = vgui.Create("DFrame")
+    frame:SetTitle("Rage Settings")
+    frame:SetSize(600, 400)
+    frame:Center()
+    frame:MakePopup()
+    frame:SetBackgroundBlur(true)
+    frame.Paint = function(self, w, h)
+        draw.RoundedBox(8, 0, 0, w, h, Color(40, 40, 40, 250)) -- Couleur du fond
+        draw.RoundedBox(8, 0, 0, w, 25, Color(60, 120, 200, 250)) -- Barre de titre
+    end
+
+    -- Panneau de gauche pour les catégories
+    local leftPanel = vgui.Create("DPanel", frame)
+    leftPanel:SetSize(120, frame:GetTall() - 30)
+    leftPanel:SetPos(5, 25)
+    leftPanel.Paint = function(self, w, h)
+        draw.RoundedBox(8, 0, 0, w, h, Color(50, 50, 50, 255)) -- Couleur du panneau gauche
+    end
+
+    -- Panneau principal pour les paramètres
+    local contentPanel = vgui.Create("DPanel", frame)
+    contentPanel:SetSize(frame:GetWide() - leftPanel:GetWide() - 15, frame:GetTall() - 30)
+    contentPanel:SetPos(leftPanel:GetWide() + 10, 25)
+    contentPanel.Paint = function(self, w, h)
+        draw.RoundedBox(8, 0, 0, w, h, Color(30, 30, 30, 255)) -- Couleur du panneau principal
+    end
+
+    -- Création des catégories
+    local categories = {
+        { name = "Rage", color = Color(200, 50, 50) },
+        { name = "Legit", color = Color(50, 200, 50) },
+        { name = "Visuals", color = Color(50, 50, 200) },
+        { name = "Misc", color = Color(200, 200, 50) }
+    }
+
+    -- Création des pages
+    local pages = {}
+    for _, category in ipairs(categories) do
+        local panel = vgui.Create("DPanel", contentPanel)
+        panel:SetSize(contentPanel:GetWide(), contentPanel:GetTall())
+        panel:SetPos(0, 0)
+        panel:SetVisible(false) -- Caché par défaut
+        panel.Paint = function(self, w, h)
+            draw.RoundedBox(8, 0, 0, w, h, category.color) -- Couleur de chaque page
+        end
+        pages[category.name] = panel
+    end
+
+    -- Afficher la première catégorie par défaut
+    pages["Rage"]:SetVisible(true)
+
+    -- Ajout des boutons de catégorie
+    local y = 5
+    for _, category in ipairs(categories) do
+        local button = vgui.Create("DButton", leftPanel)
+        button:SetText(category.name)
+        button:SetSize(leftPanel:GetWide() - 10, 40)
+        button:SetPos(5, y)
+        button:SetTextColor(Color(255, 255, 255))
+        button.Paint = function(self, w, h)
+            if self:IsHovered() then
+                draw.RoundedBox(8, 0, 0, w, h, Color(80, 80, 80, 255)) -- Couleur survolée
+                draw.SimpleText(category.name, "DermaLarge", w / 2, h / 2, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            else
+                draw.RoundedBox(8, 0, 0, w, h, Color(60, 60, 60, 255)) -- Couleur normale
+                draw.SimpleText(category.name, "DermaLarge", w / 2, h / 2, Color(200, 200, 200), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            end
+        end
+
+        -- Lorsqu'on clique, afficher la bonne page
+        button.DoClick = function()
+            for _, panel in pairs(pages) do
+                panel:SetVisible(false) -- Cacher toutes les pages
+            end
+            pages[category.name]:SetVisible(true) -- Montrer la bonne page
+        end
+
+        y = y + 45
+    end
+
+    -- Ajout des sliders dans la catégorie "Misc" pour le viewmodel
+    local miscPage = pages["Misc"]
+
+    local xSlider = vgui.Create("DNumSlider", miscPage)
+    xSlider:SetText("Viewmodel X")
+    xSlider:SetPos(10, 30)
+    xSlider:SetSize(300, 50)
+    xSlider:SetMin(-20)
+    xSlider:SetMax(20)
+    xSlider:SetDecimals(1)
+    xSlider.OnValueChanged = function(_, value)
+        RunConsoleCommand("viewmodel_offset_x", tostring(value))
+    end
+
+    local ySlider = vgui.Create("DNumSlider", miscPage)
+    ySlider:SetText("Viewmodel Y")
+    ySlider:SetPos(10, 80)
+    ySlider:SetSize(300, 50)
+    ySlider:SetMin(-20)
+    ySlider:SetMax(20)
+    ySlider:SetDecimals(1)
+    ySlider.OnValueChanged = function(_, value)
+        RunConsoleCommand("viewmodel_offset_y", tostring(value))
+    end
+
+    local zSlider = vgui.Create("DNumSlider", miscPage)
+    zSlider:SetText("Viewmodel Z")
+    zSlider:SetPos(10, 130)
+    zSlider:SetSize(300, 50)
+    zSlider:SetMin(-20)
+    zSlider:SetMax(20)
+    zSlider:SetDecimals(1)
+    zSlider.OnValueChanged = function(_, value)
+        RunConsoleCommand("viewmodel_offset_z", tostring(value))
+    end
+
+    local fovSlider = vgui.Create("DNumSlider", miscPage)
+    fovSlider:SetText("Viewmodel FOV")
+    fovSlider:SetPos(10, 180)
+    fovSlider:SetSize(300, 50)
+    fovSlider:SetMin(0)
+    fovSlider:SetMax(120)
+    fovSlider:SetDecimals(0)
+    fovSlider.OnValueChanged = function(_, value)
+        RunConsoleCommand("viewmodel_fov", tostring(value))
+    end
+end
+
+-- Commande pour ouvrir le menu
+concommand.Add("open_rage_menu", CreateRageMenu)

@@ -1,0 +1,80 @@
+-- Table pour sauvegarder les réglages
+local settings = {
+    rage_enable = false,
+    rage_fov = 0,
+    visuals_enable = false,
+    visuals_chams = false,
+    aimbot_enable = false,
+    aimbot_smoothness = 1,
+    misc_bunnyhop = false,
+    viewmodel_x = 0,
+    viewmodel_y = 0,
+    viewmodel_z = 0,
+    netlogger_enable = false,
+    netlogger_verbose = false
+}
+
+-- Fonction pour charger les réglages
+local function LoadSettings()
+    -- Charger les réglages sauvegardés ici
+end
+
+-- Fonction pour sauvegarder les réglages
+local function SaveSettings()
+    -- Sauvegarder les réglages ici
+end
+
+-- Variable pour éviter les duplications
+local menuOpen = false
+
+-- Fonction Bunny Hop
+hook.Add("CreateMove", "BunnyHop", function(cmd)
+    if settings.misc_bunnyhop and LocalPlayer():IsOnGround() and cmd:KeyDown(IN_JUMP) then
+        cmd:SetButtons(bit.bor(cmd:GetButtons(), IN_JUMP))
+    end
+end)
+
+-- Fonction pour créer ou fermer le menu
+local function ToggleRageMenu()
+    if menuOpen then
+        -- Si le menu est ouvert, on le ferme
+        if IsValid(RageMenuFrame) then
+            RageMenuFrame:Close()
+        end
+        menuOpen = false
+    else
+        -- Si le menu n'est pas ouvert, on le crée
+        menuOpen = true
+
+        -- Cadre principal
+        RageMenuFrame = vgui.Create("DFrame")
+        RageMenuFrame:SetTitle("Rage Menu")
+        RageMenuFrame:SetSize(600, 400)
+        RageMenuFrame:Center()
+        RageMenuFrame:MakePopup()
+        RageMenuFrame.Paint = function(self, w, h)
+            draw.RoundedBox(8, 0, 0, w, h, Color(40, 40, 40, 255)) -- Fond principal
+            draw.RoundedBox(8, 0, 0, w, 25, Color(30, 150, 200, 255)) -- Barre de titre
+        end
+
+        RageMenuFrame.OnClose = function()
+            menuOpen = false -- Met à jour l'état du menu
+        end
+
+        -- Configuration et contenu du menu ici
+        -- Par exemple, ajouter les catégories et les sliders comme dans le code précédent
+    end
+end
+
+-- Anti-spam pour la touche Insert
+local canToggleMenu = true
+local toggleCooldown = 0.3 -- Temps en secondes avant de pouvoir réappuyer
+
+-- Hook pour ouvrir/fermer le menu avec la touche Insert
+hook.Add("Think", "ToggleRageMenuKey", function()
+    if input.IsKeyDown(KEY_INSERT) and canToggleMenu then
+        canToggleMenu = false
+        ToggleRageMenu()
+        timer.Simple(toggleCooldown, function() canToggleMenu = true end)
+    end
+end)

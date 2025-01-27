@@ -1,0 +1,146 @@
+-- Fonction pour créer le menu
+local function CreateRageMenu()
+    -- Cadre principal
+    local frame = vgui.Create("DFrame")
+    frame:SetTitle("Rage Menu")
+    frame:SetSize(600, 400)
+    frame:Center()
+    frame:MakePopup()
+    frame.Paint = function(self, w, h)
+        draw.RoundedBox(8, 0, 0, w, h, Color(40, 40, 40, 255)) -- Fond principal
+        draw.RoundedBox(8, 0, 0, w, 25, Color(30, 150, 200, 255)) -- Barre de titre
+    end
+
+    -- Catégories (panneau gauche)
+    local leftPanel = vgui.Create("DPanel", frame)
+    leftPanel:SetSize(120, frame:GetTall() - 30)
+    leftPanel:SetPos(5, 25)
+    leftPanel.Paint = function(self, w, h)
+        draw.RoundedBox(8, 0, 0, w, h, Color(50, 50, 50, 255)) -- Panneau des catégories
+    end
+
+    -- Panneau des paramètres
+    local contentPanel = vgui.Create("DPanel", frame)
+    contentPanel:SetSize(frame:GetWide() - leftPanel:GetWide() - 15, frame:GetTall() - 30)
+    contentPanel:SetPos(leftPanel:GetWide() + 10, 25)
+    contentPanel.Paint = function(self, w, h)
+        draw.RoundedBox(8, 0, 0, w, h, Color(30, 30, 30, 255)) -- Contenu principal
+    end
+
+    -- Pages des catégories
+    local pages = {
+        ["Rage"] = vgui.Create("DPanel", contentPanel),
+        ["Visuals"] = vgui.Create("DPanel", contentPanel),
+        ["Misc"] = vgui.Create("DPanel", contentPanel),
+        ["Aimbot"] = vgui.Create("DPanel", contentPanel),
+        ["Netlogger"] = vgui.Create("DPanel", contentPanel)
+    }
+
+    -- Configuration des pages
+    for _, panel in pairs(pages) do
+        panel:SetSize(contentPanel:GetWide(), contentPanel:GetTall())
+        panel:SetVisible(false) -- Toutes les pages sont cachées par défaut
+        panel.Paint = function(self, w, h)
+            draw.RoundedBox(8, 0, 0, w, h, Color(40, 40, 40, 255)) -- Fond des pages
+        end
+    end
+    pages["Rage"]:SetVisible(true) -- Page par défaut
+
+    -- Boutons pour naviguer entre les catégories
+    local y = 10
+    for name, _ in pairs(pages) do
+        local button = vgui.Create("DButton", leftPanel)
+        button:SetText(name)
+        button:SetSize(leftPanel:GetWide() - 10, 30)
+        button:SetPos(5, y)
+        button:SetTextColor(Color(255, 255, 255))
+        button.Paint = function(self, w, h)
+            if self:IsHovered() then
+                draw.RoundedBox(8, 0, 0, w, h, Color(80, 80, 80, 255)) -- Survolé
+            else
+                draw.RoundedBox(8, 0, 0, w, h, Color(60, 60, 60, 255)) -- Normal
+            end
+        end
+        button.DoClick = function()
+            for _, panel in pairs(pages) do
+                panel:SetVisible(false) -- Cacher toutes les pages
+            end
+            pages[name]:SetVisible(true) -- Afficher la page cliquée
+        end
+        y = y + 40
+    end
+
+    -- Ajout des sliders pour modifier le viewmodel dans la page "Misc"
+    local miscPage = pages["Misc"]
+
+    -- Slider pour Viewmodel X
+    local xSlider = vgui.Create("DNumSlider", miscPage)
+    xSlider:SetText("Viewmodel X")
+    xSlider:SetPos(10, 20)
+    xSlider:SetSize(400, 50)
+    xSlider:SetMin(-20)
+    xSlider:SetMax(20)
+    xSlider:SetDecimals(1)
+    xSlider.OnValueChanged = function(_, value)
+        RunConsoleCommand("viewmodel_offset_x", tostring(value))
+    end
+
+    -- Slider pour Viewmodel Y
+    local ySlider = vgui.Create("DNumSlider", miscPage)
+    ySlider:SetText("Viewmodel Y")
+    ySlider:SetPos(10, 80)
+    ySlider:SetSize(400, 50)
+    ySlider:SetMin(-20)
+    ySlider:SetMax(20)
+    ySlider:SetDecimals(1)
+    ySlider.OnValueChanged = function(_, value)
+        RunConsoleCommand("viewmodel_offset_y", tostring(value))
+    end
+
+    -- Slider pour Viewmodel Z
+    local zSlider = vgui.Create("DNumSlider", miscPage)
+    zSlider:SetText("Viewmodel Z")
+    zSlider:SetPos(10, 140)
+    zSlider:SetSize(400, 50)
+    zSlider:SetMin(-20)
+    zSlider:SetMax(20)
+    zSlider:SetDecimals(1)
+    zSlider.OnValueChanged = function(_, value)
+        RunConsoleCommand("viewmodel_offset_z", tostring(value))
+    end
+
+    -- Slider pour le FOV
+    local fovSlider = vgui.Create("DNumSlider", miscPage)
+    fovSlider:SetText("Viewmodel FOV")
+    fovSlider:SetPos(10, 200)
+    fovSlider:SetSize(400, 50)
+    fovSlider:SetMin(0)
+    fovSlider:SetMax(120)
+    fovSlider:SetDecimals(0)
+    fovSlider.OnValueChanged = function(_, value)
+        RunConsoleCommand("viewmodel_fov", tostring(value))
+    end
+
+    -- Contenu des catégories ajoutées (Aimbot et Netlogger)
+    local aimbotPage = pages["Aimbot"]
+    local netloggerPage = pages["Netlogger"]
+
+    -- Exemple de label pour la catégorie "Aimbot"
+    local aimbotLabel = vgui.Create("DLabel", aimbotPage)
+    aimbotLabel:SetText("Aimbot Settings")
+    aimbotLabel:SetFont("DermaLarge")
+    aimbotLabel:SetTextColor(Color(255, 255, 255))
+    aimbotLabel:SetPos(10, 10)
+    aimbotLabel:SizeToContents()
+
+    -- Exemple de label pour la catégorie "Netlogger"
+    local netloggerLabel = vgui.Create("DLabel", netloggerPage)
+    netloggerLabel:SetText("Netlogger Settings")
+    netloggerLabel:SetFont("DermaLarge")
+    netloggerLabel:SetTextColor(Color(255, 255, 255))
+    netloggerLabel:SetPos(10, 10)
+    netloggerLabel:SizeToContents()
+end
+
+-- Commande pour ouvrir le menu
+concommand.Add("open_rage_menu", CreateRageMenu)

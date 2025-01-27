@@ -1,0 +1,89 @@
+-- Define a function to create the menu
+local function CreateRageMenu()
+    -- Main frame
+    local frame = vgui.Create("DFrame")
+    frame:SetTitle("Rage Settings")
+    frame:SetSize(600, 400)
+    frame:Center()
+    frame:MakePopup()
+
+    -- Left panel for sections
+    local leftPanel = vgui.Create("DPanel", frame)
+    leftPanel:SetSize(120, frame:GetTall() - 30)
+    leftPanel:SetPos(5, 25)
+
+    -- Tabs for different sections
+    local tabs = {
+        { icon = "RAGE", text = "Rage" },
+        { icon = "LEGIT", text = "Legit" },
+        { icon = "VISUALS", text = "Visuals" },
+        { icon = "MISC", text = "Misc" },
+        { icon = "SKINS", text = "Skins" },
+        { icon = "SCRIPTS", text = "Scripts" }
+    }
+
+    -- Adding buttons to left panel
+    local y = 5
+    for _, tab in ipairs(tabs) do
+        local button = vgui.Create("DButton", leftPanel)
+        button:SetText(tab.text)
+        button:SetSize(leftPanel:GetWide() - 10, 30)
+        button:SetPos(5, y)
+        y = y + 35
+
+        -- Button click behavior
+        button.DoClick = function()
+            print(tab.text .. " Tab Clicked")
+        end
+    end
+
+    -- Content panel for settings
+    local contentPanel = vgui.Create("DPanel", frame)
+    contentPanel:SetSize(frame:GetWide() - leftPanel:GetWide() - 15, frame:GetTall() - 30)
+    contentPanel:SetPos(leftPanel:GetWide() + 10, 25)
+
+    -- Create sections within the content panel
+    local generalLabel = vgui.Create("DLabel", contentPanel)
+    generalLabel:SetText("General Settings")
+    generalLabel:SetFont("DermaDefaultBold")
+    generalLabel:SetPos(10, 10)
+    generalLabel:SizeToContents()
+
+    local enableCheck = vgui.Create("DCheckBoxLabel", contentPanel)
+    enableCheck:SetText("Enable")
+    enableCheck:SetPos(10, 40)
+    enableCheck:SizeToContents()
+
+    local fovSlider = vgui.Create("DNumSlider", contentPanel)
+    fovSlider:SetText("FOV")
+    fovSlider:SetMin(0)
+    fovSlider:SetMax(180)
+    fovSlider:SetDecimals(0)
+    fovSlider:SetPos(10, 70)
+    fovSlider:SetSize(300, 50)
+
+    -- Repeat for other settings
+    -- Add checkboxes, sliders, dropdowns as needed
+
+    -- Example dropdown
+    local pitchDropdown = vgui.Create("DComboBox", contentPanel)
+    pitchDropdown:SetPos(10, 130)
+    pitchDropdown:SetSize(150, 20)
+    pitchDropdown:SetValue("Pitch")
+    pitchDropdown:AddChoice("None")
+    pitchDropdown:AddChoice("Viewangle")
+
+    -- Example input for "Yaw Modifier Amount"
+    local yawModifierSlider = vgui.Create("DNumSlider", contentPanel)
+    yawModifierSlider:SetText("Yaw Modifier Amount")
+    yawModifierSlider:SetMin(0)
+    yawModifierSlider:SetMax(360)
+    yawModifierSlider:SetDecimals(0)
+    yawModifierSlider:SetPos(10, 170)
+    yawModifierSlider:SetSize(300, 50)
+
+    -- You can add more sections for "Target", "Fakelag", etc.
+end
+
+-- Bind the menu to a console command
+concommand.Add("open_rage_menu", CreateRageMenu)

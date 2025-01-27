@@ -1,0 +1,285 @@
+-- Table pour sauvegarder les réglages
+local settings = {
+    rage_enable = false,
+    rage_fov = 0,
+    visuals_enable = false,
+    visuals_chams = false,
+    aimbot_enable = false,
+    aimbot_smoothness = 1,
+    misc_bunnyhop = false,
+    viewmodel_x = 0,
+    viewmodel_y = 0,
+    viewmodel_z = 0,
+    netlogger_enable = false,
+    netlogger_verbose = false
+}
+
+-- Fonction pour charger les réglages
+local function LoadSettings()
+    -- Ici, vous pouvez intégrer une persistance plus avancée si nécessaire.
+    -- Par exemple, les enregistrer dans un fichier.
+end
+
+-- Fonction pour sauvegarder les réglages
+local function SaveSettings()
+    -- Ici, vous pouvez intégrer une persistance plus avancée si nécessaire.
+    -- Par exemple, les enregistrer dans un fichier.
+end
+
+-- Fonction Bunny Hop
+hook.Add("CreateMove", "BunnyHop", function(cmd)
+    if settings.misc_bunnyhop and LocalPlayer():IsOnGround() and cmd:KeyDown(IN_JUMP) then
+        cmd:SetButtons(bit.bor(cmd:GetButtons(), IN_JUMP))
+    end
+end)
+
+-- Variable pour éviter le spam de la touche Insert
+local canToggleMenu = true
+local toggleCooldown = 0.3 -- Temps en secondes avant de pouvoir réappuyer
+
+-- Fonction pour créer le menu
+local function CreateRageMenu()
+    -- Charger les réglages
+    LoadSettings()
+
+    -- Cadre principal
+    local frame = vgui.Create("DFrame")
+    frame:SetTitle("Rage Menu")
+    frame:SetSize(600, 400)
+    frame:Center()
+    frame:MakePopup()
+    frame.Paint = function(self, w, h)
+        draw.RoundedBox(8, 0, 0, w, h, Color(40, 40, 40, 255)) -- Fond principal
+        draw.RoundedBox(8, 0, 0, w, 25, Color(30, 150, 200, 255)) -- Barre de titre
+    end
+
+    frame.OnClose = function()
+        canToggleMenu = false
+        timer.Simple(toggleCooldown, function() canToggleMenu = true end)
+    end
+
+    -- Catégories (panneau gauche)
+    local leftPanel = vgui.Create("DPanel", frame)
+    leftPanel:SetSize(120, frame:GetTall() - 30)
+    leftPanel:SetPos(5, 25)
+    leftPanel.Paint = function(self, w, h)
+        draw.RoundedBox(8, 0, 0, w, h, Color(50, 50, 50, 255)) -- Panneau des catégories
+    end
+
+    -- Panneau des paramètres
+    local contentPanel = vgui.Create("DPanel", frame)
+    contentPanel:SetSize(frame:GetWide() - leftPanel:GetWide() - 15, frame:GetTall() - 30)
+    contentPanel:SetPos(leftPanel:GetWide() + 10, 25)
+    contentPanel.Paint = function(self, w, h)
+        draw.RoundedBox(8, 0, 0, w, h, Color(30, 30, 30, 255)) -- Contenu principal
+    end
+
+    -- Pages des catégories
+    local pages = {
+        ["Rage"] = vgui.Create("DPanel", contentPanel),
+        ["Visuals"] = vgui.Create("DPanel", contentPanel),
+        ["Aimbot"] = vgui.Create("DPanel", contentPanel),
+        ["Misc"] = vgui.Create("DPanel", contentPanel),
+        ["Netlogger"] = vgui.Create("DPanel", contentPanel)
+    }
+
+    -- Configuration des pages
+    for _, panel in pairs(pages) do
+        panel:SetSize(contentPanel:GetWide(), contentPanel:GetTall())
+        panel:SetVisible(false) -- Toutes les pages sont cachées par défaut
+        panel.Paint = function(self, w, h)
+            draw.RoundedBox(8, 0, 0, w, h, Color(40, 40, 40, 255)) -- Fond des pages
+        end
+    end
+    pages["Rage"]:SetVisible(true) -- Page par défaut
+
+    -- Ordre des catégories
+    local categoryOrder = { "Rage", "Visuals", "Aimbot", "Misc", "Netlogger" }
+
+    -- Boutons pour naviguer entre les catégories
+    local y = 10
+    for _, name in ipairs(categoryOrder) do
+        local button = vgui.Create("DButton", leftPanel)
+        button:SetText(name)
+        button:SetSize(leftPanel:GetWide() - 10, 30)
+        button:SetPos(5, y)
+        button:SetTextColor(Color(255, 255, 255))
+        button.Paint = function(self, w, h)
+            if self:IsHovered() then
+                draw.RoundedBox(8, 0, 0, w, h, Color(80, 80, 80, 255)) -- Survolé
+            else
+                draw.RoundedBox(8, 0, 0, w, h, Color(60, 60, 60, 255)) -- Normal
+            end
+        end
+        button.DoClick = function()
+            for _, panel in pairs(pages) do
+                panel:SetVisible(false) -- Cacher toutes les pages
+            end
+            pages[name]:SetVisible(true) -- Afficher la page cliquée
+        end
+        y = y + 40
+    end
+
+    -- Ajout des cases à cocher et sliders dans chaque catégorie
+
+    -- Page "Rage"
+    local ragePage = pages["Rage"]
+    local rageEnable = vgui.Create("DCheckBoxLabel", ragePage)
+    rageEnable:SetText("Enable Rage Mode")
+    rageEnable:SetPos(10, 10)
+    rageEnable:SetValue(settings.rage_enable and 1 or 0)
+    rageEnable:SizeToContents()
+    rageEnable.OnChange = function(_, val)
+        settings.rage_enable = val
+        SaveSettings()
+    end
+
+    local rageFOVSlider = vgui.Create("DNumSlider", ragePage)
+    rageFOVSlider:SetText("Rage FOV")
+    rageFOVSlider:SetPos(10, 40)
+    rageFOVSlider:SetSize(400, 50)
+    rageFOVSlider:SetMin(0)
+    rageFOVSlider:SetMax(180)
+    rageFOVSlider:SetDecimals(0)
+    rageFOVSlider:SetValue(settings.rage_fov)
+    rageFOVSlider.OnValueChanged = function(_, value)
+        settings.rage_fov = value
+        SaveSettings()
+    end
+
+    -- Page "Visuals"
+    local visualsPage = pages["Visuals"]
+    local visualsEnable = vgui.Create("DCheckBoxLabel", visualsPage)
+    visualsEnable:SetText("Enable Visuals")
+    visualsEnable:SetPos(10, 10)
+    visualsEnable:SetValue(settings.visuals_enable and 1 or 0)
+    visualsEnable:SizeToContents()
+    visualsEnable.OnChange = function(_, val)
+        settings.visuals_enable = val
+        SaveSettings()
+    end
+
+    local visualsChams = vgui.Create("DCheckBoxLabel", visualsPage)
+    visualsChams:SetText("Enable Chams")
+    visualsChams:SetPos(10, 40)
+    visualsChams:SetValue(settings.visuals_chams and 1 or 0)
+    visualsChams:SizeToContents()
+    visualsChams.OnChange = function(_, val)
+        settings.visuals_chams = val
+        SaveSettings()
+    end
+
+    -- Page "Aimbot"
+    local aimbotPage = pages["Aimbot"]
+    local aimbotEnable = vgui.Create("DCheckBoxLabel", aimbotPage)
+    aimbotEnable:SetText("Enable Aimbot")
+    aimbotEnable:SetPos(10, 10)
+    aimbotEnable:SetValue(settings.aimbot_enable and 1 or 0)
+    aimbotEnable:SizeToContents()
+    aimbotEnable.OnChange = function(_, val)
+        settings.aimbot_enable = val
+        SaveSettings()
+    end
+
+    local aimbotSmoothSlider = vgui.Create("DNumSlider", aimbotPage)
+    aimbotSmoothSlider:SetText("Aimbot Smoothness")
+    aimbotSmoothSlider:SetPos(10, 40)
+    aimbotSmoothSlider:SetSize(400, 50)
+    aimbotSmoothSlider:SetMin(1)
+    aimbotSmoothSlider:SetMax(20)
+    aimbotSmoothSlider:SetDecimals(1)
+    aimbotSmoothSlider:SetValue(settings.aimbot_smoothness)
+    aimbotSmoothSlider.OnValueChanged = function(_, value)
+        settings.aimbot_smoothness = value
+        SaveSettings()
+    end
+
+    -- Page "Misc"
+    local miscPage = pages["Misc"]
+    local miscBunnyHop = vgui.Create("DCheckBoxLabel", miscPage)
+    miscBunnyHop:SetText("Enable Bunny Hop")
+    miscBunnyHop:SetPos(10, 10)
+    miscBunnyHop:SetValue(settings.misc_bunnyhop and 1 or 0)
+    miscBunnyHop:SizeToContents()
+    miscBunnyHop.OnChange = function(_, val)
+        settings.misc_bunnyhop = val
+        SaveSettings()
+    end
+
+    -- Sliders pour modifier le ViewModel
+    local xSlider = vgui.Create("DNumSlider", miscPage)
+    xSlider:SetText("Viewmodel X")
+    xSlider:SetPos(10, 40)
+    xSlider:SetSize(400, 50)
+    xSlider:SetMin(-20)
+    xSlider:SetMax(20)
+    xSlider:SetDecimals(1)
+    xSlider:SetValue(settings.viewmodel_x)
+    xSlider.OnValueChanged = function(_, value)
+        settings.viewmodel_x = value
+        RunConsoleCommand("viewmodel_offset_x", tostring(value))
+        SaveSettings()
+    end
+
+    local ySlider = vgui.Create("DNumSlider", miscPage)
+    ySlider:SetText("Viewmodel Y")
+    ySlider:SetPos(10, 100)
+    ySlider:SetSize(400, 50)
+    ySlider:SetMin(-20)
+    ySlider:SetMax(20)
+    ySlider:SetDecimals(1)
+    ySlider:SetValue(settings.viewmodel_y)
+    ySlider.OnValueChanged = function(_, value)
+        settings.viewmodel_y = value
+        RunConsoleCommand("viewmodel_offset_y", tostring(value))
+        SaveSettings()
+    end
+
+    local zSlider = vgui.Create("DNumSlider", miscPage)
+    zSlider:SetText("Viewmodel Z")
+    zSlider:SetPos(10, 160)
+    zSlider:SetSize(400, 50)
+    zSlider:SetMin(-20)
+    zSlider:SetMax(20)
+    zSlider:SetDecimals(1)
+    zSlider:SetValue(settings.viewmodel_z)
+    zSlider.OnValueChanged = function(_, value)
+        settings.viewmodel_z = value
+        RunConsoleCommand("viewmodel_offset_z", tostring(value))
+        SaveSettings()
+    end
+
+    -- Page "Netlogger"
+    local netloggerPage = pages["Netlogger"]
+    local netloggerEnable = vgui.Create("DCheckBoxLabel", netloggerPage)
+    netloggerEnable:SetText("Enable Netlogger")
+    netloggerEnable:SetPos(10, 10)
+    netloggerEnable:SetValue(settings.netlogger_enable and 1 or 0)
+    netloggerEnable:SizeToContents()
+    netloggerEnable.OnChange = function(_, val)
+        settings.netlogger_enable = val
+        SaveSettings()
+    end
+
+    local netloggerVerbose = vgui.Create("DCheckBoxLabel", netloggerPage)
+    netloggerVerbose:SetText("Enable Verbose Logging")
+    netloggerVerbose:SetPos(10, 40)
+    netloggerVerbose:SetValue(settings.netlogger_verbose and 1 or 0)
+    netloggerVerbose:SizeToContents()
+    netloggerVerbose.OnChange = function(_, val)
+        settings.netlogger_verbose = val
+        SaveSettings()
+    end
+end
+
+-- Commande pour ouvrir le menu
+concommand.Add("open_rage_menu", CreateRageMenu)
+
+-- Hook pour ouvrir le menu avec la touche Insert
+hook.Add("Think", "ToggleRageMenu", function()
+    if input.IsKeyDown(KEY_INSERT) and canToggleMenu then
+        canToggleMenu = false
+        CreateRageMenu()
+        timer.Simple(toggleCooldown, function() canToggleMenu = true end)
+    end
+end)
